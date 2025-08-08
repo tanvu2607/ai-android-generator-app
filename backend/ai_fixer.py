@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 import argparse
 import httpx
+import re
 
 TEMPLATES_ROOT = Path("backend/app/templates/android")
 
@@ -18,6 +19,8 @@ SYSTEM_MSG = (
     "- Output STRICT JSON with key 'edits': a list of { 'path': string, 'new_content': string }. Paths are repository-relative.\n"
     "- Do not include explanations outside JSON."
 )
+
+ALLOWED_COMPOSE_COMPILER_VERSION = "1.5.14"
 
 
 def call_gemini(api_key: str, prompt: str) -> str:
@@ -51,6 +54,17 @@ def gather_template_snapshot() -> str:
     return "\n".join(lines)
 
 
+def sanitize_gradle_content(path: Path, content: str) -> str:
+    if path.as_posix().endswith("app/build.gradle.kts.j2"):
+        # Force a known-good Compose compiler extension version
+        content = re.sub(
+            r'(kotlinCompilerExtensionVersion\s*=\s*")([^"]+)(")',
+            rf'\g<1>{ALLOWED_COMPOSE_COMPILER_VERSION}\3',
+            content,
+        )
+    return content
+
+
 def apply_edits(edits: List[Dict[str, Any]]) -> int:
     applied = 0
     for edit in edits:
@@ -63,7 +77,8 @@ def apply_edits(edits: List[Dict[str, Any]]) -> int:
             continue
         target = Path(path.as_posix())
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(new_content, encoding="utf-8")
+        sanitized = sanitize_gradle_content(target, new_content)
+        target.write_text(sanitized, encoding="utf-8")
         applied += 1
     return applied
 
