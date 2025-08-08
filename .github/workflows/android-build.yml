@@ -48,6 +48,9 @@ jobs:
           APP_NAME="${{ github.event.inputs.app_name }}"; [ -z "$APP_NAME" ] && APP_NAME="GeneratedApp"
           PKG_NAME="${{ github.event.inputs.package_name }}"; [ -z "$PKG_NAME" ] && PKG_NAME="com.example.generatedapp"
           PROMPT_TEXT="${{ github.event.inputs.prompt }}"; [ -z "$PROMPT_TEXT" ] && PROMPT_TEXT="Màn hình danh sách đơn giản với Material3"
+          echo "APP_NAME=$APP_NAME" >> $GITHUB_ENV
+          echo "PKG_NAME=$PKG_NAME" >> $GITHUB_ENV
+          echo "PROMPT_TEXT=$PROMPT_TEXT" >> $GITHUB_ENV
           if [ -n "${GEMINI_API_KEY:-}" ]; then
             export LLM_PROVIDER=gemini
           fi
@@ -86,6 +89,10 @@ jobs:
       - name: Build with retry/fix loop
         env:
           ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          APP_NAME: ${{ env.APP_NAME }}
+          PKG_NAME: ${{ env.PKG_NAME }}
+          PROMPT_TEXT: ${{ env.PROMPT_TEXT }}
         run: |
           bash .github/scripts/build_android.sh generated
 
