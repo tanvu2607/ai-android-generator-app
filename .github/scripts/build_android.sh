@@ -15,9 +15,15 @@ apply_fixes() {
   (cd "$PROJECT_DIR" && ./gradlew --no-daemon --refresh-dependencies clean) || true
 }
 
+print_diagnostics() {
+  echo "[diag] AndroidManifest.xml:" || true
+  sed -n '1,200p' "$PROJECT_DIR/app/src/main/AndroidManifest.xml" || true
+  echo "[diag] themes.xml:" || true
+  sed -n '1,200p' "$PROJECT_DIR/app/src/main/res/values/themes.xml" || true
+}
+
 regenerate_from_templates() {
   echo "[ai-fix] Regenerating project from updated templates..."
-  rm -rf "$PROJECT_DIR"_new
   python -m backend.cli \
     -n "${APP_NAME}" \
     -p "${PKG_NAME}" \
@@ -28,7 +34,7 @@ regenerate_from_templates() {
   unzip -q android-project.zip -d "$PROJECT_DIR"
 }
 
-max_attempts=3
+max_attempts=5
 attempt=1
 
 # Inputs carried via environment (set by workflow step)
@@ -43,6 +49,8 @@ if [ ! -f "$PROJECT_DIR/gradlew" ]; then
   chmod +x "$PROJECT_DIR/gradlew" || true
 fi
 
+print_diagnostics
+
 while [ $attempt -le $max_attempts ]; do
   echo "[build] Attempt $attempt/$max_attempts"
   if run_gradle "$attempt"; then
@@ -56,12 +64,17 @@ while [ $attempt -le $max_attempts ]; do
     if [ -n "${GEMINI_API_KEY:-}" ]; then
       echo "[ai-fix] Invoking Gemini fixer..."
       python backend/ai_fixer.py --generated "$PROJECT_DIR" --log "$LOG_DIR/build_attempt_${attempt}.log" || true
+      # If templates changed, mark for commit in workflow
+      if ! git diff --quiet -- backend/app/templates/android; then
+        echo "AI_FIX_APPLIED=1" >> "$GITHUB_ENV" || true
+      fi
       regenerate_from_templates
       # Ensure wrapper exists again
       if [ ! -f "$PROJECT_DIR/gradlew" ]; then
         (cd "$PROJECT_DIR" && gradle wrapper --gradle-version 8.7) || true
         chmod +x "$PROJECT_DIR/gradlew" || true
       fi
+      print_diagnostics
     fi
   fi
 
