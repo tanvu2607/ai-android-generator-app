@@ -80,10 +80,12 @@ jobs:
           sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "platform-tools" --sdk_root="$ANDROID_SDK_ROOT"
           yes | sdkmanager --licenses --sdk_root="$ANDROID_SDK_ROOT"
 
-      - name: Setup Gradle 8.7
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: 8.7
+      - name: Initialize Gradle wrapper (8.7)
+        run: |
+          cd generated
+          gradle -v
+          gradle wrapper --gradle-version 8.7
+          chmod +x gradlew
 
       - name: Build with retry/fix loop
         env:
