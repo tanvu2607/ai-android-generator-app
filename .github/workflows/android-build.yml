@@ -27,7 +27,20 @@ jobs:
           python -m pip install -U pip
           pip install -r backend/requirements-min.txt
 
-      - name: Generate Android project zip
+      - name: Generate Android project zip (Gemini)
+        if: ${{ secrets.GEMINI_API_KEY != '' }}
+        env:
+          LLM_PROVIDER: gemini
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python -m backend.cli \
+            -n GeneratedApp \
+            -p com.example.generatedapp \
+            -r "Màn hình danh sách đơn giản với Material3" \
+            -o android-project.zip
+
+      - name: Generate Android project zip (fallback/OpenAI)
+        if: ${{ secrets.GEMINI_API_KEY == '' }}
         run: |
           python -m backend.cli \
             -n GeneratedApp \

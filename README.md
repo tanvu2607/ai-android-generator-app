@@ -7,7 +7,7 @@
 - `Dockerfile`: Chạy backend bằng Docker
 
 ## Chạy nhanh
-- Ưu tiên: Docker
+- Docker
 
 ```bash
 docker build -t ai-android-generator .
@@ -22,5 +22,20 @@ bash scripts/dev.sh
 
 Mở `http://localhost:8000` để nhập prompt, server trả về file `android-project.zip`.
 
+## Chọn LLM: Gemini (khuyên dùng khi không có OpenAI)
+- Dùng trên GitHub Actions (chỉ cần web/điện thoại):
+  - Vào repo trên GitHub → Settings → Secrets and variables → Actions → New repository secret
+  - Name: `GEMINI_API_KEY`
+  - Value: dán key của bạn → Add secret
+  - Workflow sẽ tự dùng Gemini khi secret tồn tại (không cần chỉnh gì thêm)
+
+- Dùng khi chạy Docker cục bộ:
+```bash
+docker run -p 8000:8000 \
+  -e LLM_PROVIDER=gemini \
+  -e GEMINI_API_KEY=YOUR_GEMINI_KEY \
+  ai-android-generator
+```
+
 ## Ghi chú
-- Có thể đặt `OPENAI_API_KEY` để sinh Compose UI từ LLM; nếu không có, hệ thống dùng fallback UI.
+- Có thể đặt `OPENAI_API_KEY` để sinh Compose UI từ OpenAI; nếu không có, hệ thống dùng `GEMINI_API_KEY` (nếu `LLM_PROVIDER=gemini`), hoặc fallback.
