@@ -70,6 +70,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -95,6 +96,17 @@ jobs:
           PROMPT_TEXT: ${{ env.PROMPT_TEXT }}
         run: |
           bash .github/scripts/build_android.sh generated
+
+      - name: Upload APK/AAB artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-outputs
+          path: |
+            generated/app/build/outputs/apk/**
+            generated/app/build/outputs/bundle/**
+            android-project.zip
+          if-no-files-found: warn
 
       - name: Upload build logs
         if: always()
