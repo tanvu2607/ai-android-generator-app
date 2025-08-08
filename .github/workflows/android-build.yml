@@ -5,7 +5,20 @@ on:
     branches: [ main, '**' ]
   pull_request:
     branches: [ '**' ]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: 'App name (project name)'
+        required: true
+        default: 'GeneratedApp'
+      package_name:
+        description: 'Android package name'
+        required: true
+        default: 'com.example.generatedapp'
+      prompt:
+        description: 'UI/feature prompt (vi/en)'
+        required: true
+        default: 'Màn hình danh sách đơn giản với Material3'
 
 permissions:
   contents: read
@@ -34,18 +47,18 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python -m backend.cli \
-            -n GeneratedApp \
-            -p com.example.generatedapp \
-            -r "Màn hình danh sách đơn giản với Material3" \
+            -n "${{ github.event.inputs.app_name }}" \
+            -p "${{ github.event.inputs.package_name }}" \
+            -r "${{ github.event.inputs.prompt }}" \
             -o android-project.zip
 
       - name: Generate Android project zip (fallback/OpenAI)
         if: ${{ secrets.GEMINI_API_KEY == '' }}
         run: |
           python -m backend.cli \
-            -n GeneratedApp \
-            -p com.example.generatedapp \
-            -r "Màn hình danh sách đơn giản với Material3" \
+            -n "${{ github.event.inputs.app_name }}" \
+            -p "${{ github.event.inputs.package_name }}" \
+            -r "${{ github.event.inputs.prompt }}" \
             -o android-project.zip
 
       - name: Unzip generated project
