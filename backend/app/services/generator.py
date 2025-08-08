@@ -63,6 +63,11 @@ async def render_project(config: AndroidProjectConfig, output_dir: Path) -> None
         "app/src/main/res/values/strings.xml.j2": "app/src/main/res/values/strings.xml",
         "app/src/main/res/values/themes.xml.j2": "app/src/main/res/values/themes.xml",
         "app/src/main/res/values/colors.xml.j2": "app/src/main/res/values/colors.xml",
+        # Adaptive launcher icon assets
+        "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml.j2": "app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+        "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml.j2": "app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+        "app/src/main/res/values/ic_launcher_background.xml.j2": "app/src/main/res/values/ic_launcher_background.xml",
+        "app/src/main/res/drawable/ic_launcher_foreground.xml.j2": "app/src/main/res/drawable/ic_launcher_foreground.xml",
     }
 
     for template_name, out_rel in files.items():
