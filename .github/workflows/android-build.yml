@@ -40,21 +40,13 @@ jobs:
           python -m pip install -U pip
           pip install -r backend/requirements-min.txt
 
-      - name: Generate Android project zip (Gemini)
-        if: ${{ secrets.GEMINI_API_KEY != '' }}
+      - name: Generate Android project zip
         env:
-          LLM_PROVIDER: gemini
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          python -m backend.cli \
-            -n "${{ github.event.inputs.app_name }}" \
-            -p "${{ github.event.inputs.package_name }}" \
-            -r "${{ github.event.inputs.prompt }}" \
-            -o android-project.zip
-
-      - name: Generate Android project zip (fallback/OpenAI)
-        if: ${{ secrets.GEMINI_API_KEY == '' }}
-        run: |
+          if [ -n "${GEMINI_API_KEY:-}" ]; then
+            export LLM_PROVIDER=gemini
+          fi
           python -m backend.cli \
             -n "${{ github.event.inputs.app_name }}" \
             -p "${{ github.event.inputs.package_name }}" \
