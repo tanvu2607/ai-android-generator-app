@@ -44,13 +44,17 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
+          # Determine inputs or use defaults when empty (push event)
+          APP_NAME="${{ github.event.inputs.app_name }}"; [ -z "$APP_NAME" ] && APP_NAME="GeneratedApp"
+          PKG_NAME="${{ github.event.inputs.package_name }}"; [ -z "$PKG_NAME" ] && PKG_NAME="com.example.generatedapp"
+          PROMPT_TEXT="${{ github.event.inputs.prompt }}"; [ -z "$PROMPT_TEXT" ] && PROMPT_TEXT="Màn hình danh sách đơn giản với Material3"
           if [ -n "${GEMINI_API_KEY:-}" ]; then
             export LLM_PROVIDER=gemini
           fi
           python -m backend.cli \
-            -n "${{ github.event.inputs.app_name }}" \
-            -p "${{ github.event.inputs.package_name }}" \
-            -r "${{ github.event.inputs.prompt }}" \
+            -n "$APP_NAME" \
+            -p "$PKG_NAME" \
+            -r "$PROMPT_TEXT" \
             -o android-project.zip
 
       - name: Unzip generated project
