@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Android Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .chip { @apply inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 hover:bg-gray-200 cursor-pointer; }
+    .chip.active { @apply bg-indigo-600 text-white; }
+    .card { @apply bg-white border border-gray-200 rounded-2xl shadow-sm p-6; }
+    .label { @apply text-sm font-semibold text-gray-700; }
+    .input { @apply w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500; }
+    .section-title { @apply text-base font-bold text-gray-900 mb-3; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  <div class="max-w-6xl mx-auto p-6">
+    <header class="mb-6 flex items-center justify-between">
+      <h1 class="text-2xl font-bold">AI Android Generator</h1>
+      <div class="text-sm text-gray-500">Material3 • Jetpack Compose • Gradle</div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="space-y-6">
+        <div class="card">
+          <div class="section-title">Cấu hình dự án</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="label">Tên ứng dụng</label>
+              <input class="input" id="app_name" value="AIAndroidApp" />
+            </div>
+            <div>
+              <label class="label">Package name</label>
+              <input class="input" id="package_name" value="com.example.aiandroidapp" />
+            </div>
+            <div>
+              <label class="label">Min SDK</label>
+              <input class="input" id="min_sdk" type="number" value="24" />
+            </div>
+            <div>
+              <label class="label">Target SDK</label>
+              <input class="input" id="target_sdk" type="number" value="34" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="label">Mô tả</label>
+              <input class="input" id="description" placeholder="Ứng dụng demo sinh giao diện bằng AI" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Preset & Tùy chọn</div>
+          <div class="mb-3 text-sm text-gray-500">Chọn nhanh kiểu app và thành phần, hệ thống sẽ tự tổng hợp vào prompt.</div>
+          <div class="flex flex-wrap gap-2 mb-3" id="preset_chips">
+            <span class="chip" data-preset="ToDo">ToDo</span>
+            <span class="chip" data-preset="News">News</span>
+            <span class="chip" data-preset="Chat">Chat</span>
+            <span class="chip" data-preset="Shop">Shop</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <div class="label mb-1">Kiến trúc</div>
+              <div class="flex flex-wrap gap-2" id="arch_chips">
+                <span class="chip active" data-flag="MVVM">MVVM</span>
+                <span class="chip active" data-flag="Hilt DI">Hilt DI</span>
+                <span class="chip active" data-flag="Navigation Compose">Navigation Compose</span>
+              </div>
+            </div>
+            <div>
+              <div class="label mb-1">Data layer</div>
+              <div class="flex flex-wrap gap-2" id="data_chips">
+                <span class="chip" data-flag="Room">Room</span>
+                <span class="chip" data-flag="Datastore">Datastore</span>
+                <span class="chip" data-flag="Retrofit API + caching">Retrofit + cache</span>
+              </div>
+            </div>
+            <div>
+              <div class="label mb-1">Thành phần UI</div>
+              <div class="flex flex-wrap gap-2" id="ui_chips">
+                <span class="chip" data-flag="danh sách">Danh sách</span>
+                <span class="chip" data-flag="mạng lưới">Grid</span>
+                <span class="chip" data-flag="thanh tìm kiếm">Search</span>
+                <span class="chip" data-flag="form CRUD">Form CRUD</span>
+                <span class="chip" data-flag="bottom navigation">Bottom Nav</span>
+                <span class="chip" data-flag="tabs">Tabs</span>
+                <span class="chip" data-flag="settings">Settings</span>
+              </div>
+            </div>
+            <div>
+              <div class="label mb-1">Theme</div>
+              <div class="flex flex-wrap gap-2" id="theme_chips">
+                <span class="chip active" data-flag="Material3">Material3</span>
+                <span class="chip active" data-flag="Dark mode">Dark mode</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Prompt</div>
+          <textarea id="prompt" class="input" rows="6" placeholder="Mô tả yêu cầu UI/chức năng"></textarea>
+          <div class="flex gap-3 mt-4">
+            <button id="btnGenerate" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Sinh dự án (.zip)</button>
+            <button id="btnBuildPrompt" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200">Gợi ý prompt</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="card">
+          <div class="section-title">Live Prompt Preview</div>
+          <pre id="preview" class="whitespace-pre-wrap text-sm text-gray-800"></pre>
+        </div>
+        <div class="card">
+          <div class="section-title">Gợi ý mẫu</div>
+          <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+            <li>“ToDo app: danh sách công việc, thêm/sửa/xóa, tìm kiếm, lọc theo trạng thái”</li>
+            <li>“News app: danh sách bài viết, chi tiết, bookmark, dark mode”</li>
+            <li>“Shop app: grid sản phẩm, giỏ hàng, thanh toán giả lập, bottom nav”</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const promptEl = document.getElementById('prompt');
+    const previewEl = document.getElementById('preview');
+
+    const chipsGroups = ['preset_chips','arch_chips','data_chips','ui_chips','theme_chips'];
+    chipsGroups.forEach(id => {
+      document.getElementById(id).addEventListener('click', (e) => {
+        const chip = e.target.closest('.chip');
+        if (!chip) return;
+        chip.classList.toggle('active');
+        updatePreview();
+      });
+    });
+
+    function selectedFlags(containerId) {
+      return Array.from(document.querySelectorAll(`#${containerId} .chip.active`)).map(el => el.dataset.flag || el.dataset.preset).filter(Boolean);
+    }
+
+    function buildPrompt() {
+      const presets = selectedFlags('preset_chips');
+      const arch = selectedFlags('arch_chips');
+      const data = selectedFlags('data_chips');
+      const ui = selectedFlags('ui_chips');
+      const theme = selectedFlags('theme_chips');
+      const base = promptEl.value.trim();
+      const lines = [];
+      if (presets.length) lines.push(`Loại app: ${presets.join(', ')}`);
+      if (arch.length) lines.push(`Kiến trúc: ${arch.join(', ')}`);
+      if (data.length) lines.push(`Data layer: ${data.join(', ')}`);
+      if (ui.length) lines.push(`Thành phần UI: ${ui.join(', ')}`);
+      if (theme.length) lines.push(`Theme: ${theme.join(', ')}`);
+      if (base) lines.push(`Mô tả bổ sung: ${base}`);
+      return lines.join('\n');
+    }
+
+    function updatePreview() {
+      previewEl.textContent = buildPrompt();
+    }
+
+    document.getElementById('btnBuildPrompt').addEventListener('click', () => {
+      promptEl.value = buildPrompt();
+      updatePreview();
+    });
+
+    document.getElementById('btnGenerate').addEventListener('click', async () => {
+      const fd = new FormData();
+      fd.append('app_name', document.getElementById('app_name').value);
+      fd.append('package_name', document.getElementById('package_name').value);
+      fd.append('min_sdk', document.getElementById('min_sdk').value);
+      fd.append('target_sdk', document.getElementById('target_sdk').value);
+      fd.append('description', document.getElementById('description').value);
+      fd.append('prompt', promptEl.value || buildPrompt());
+      const res = await fetch('/generate', { method: 'POST', body: fd });
+      if (!res.ok) { alert('Lỗi sinh dự án'); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'android-project.zip';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    updatePreview();
+  </script>
+</body>
+</html>
