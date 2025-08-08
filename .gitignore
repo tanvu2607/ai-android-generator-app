@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.venv/
+venv/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Build
+/dist/
+/build/
+/out/
+
+# Android/Gradle
+**/.gradle/
+**/.idea/
+**/.cxx/
+**/build/
+local.properties
+
+# VSCode/Cursor
+.vscode/
+.history/
+.cursor/
+
+# Others
+*.log
+*.tmp
+*.swp
