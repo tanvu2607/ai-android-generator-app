@@ -16,9 +16,17 @@ class MainActivity : ComponentActivity() {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     // Generated content starts here
-{{ compose_content | indent(20) }}
+{{ compose_inline | indent(20) }}
                 }
             }
         }
+    }
+}
+
+@Composable
+fun GeneratedPlaceholder() {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(text = "Generated screen placeholder", style = MaterialTheme.typography.headlineSmall)
+        Button(onClick = { /* no-op */ }) { Text("Action") }
     }
 }

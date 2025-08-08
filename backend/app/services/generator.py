@@ -11,6 +11,10 @@ from .llm import generate_compose_content_from_prompt
 
 TEMPLATES_DIR = Path("backend/app/templates/android")
 
+SAFE_WIDGET_MARKERS = (
+    "Column(", "Row(", "Box(", "Text(", "Button(", "Scaffold(", "LazyColumn(", "LazyRow("
+)
+
 @dataclass
 class AndroidProjectConfig:
     app_name: str
@@ -35,11 +39,24 @@ def _package_to_path(package_name: str) -> str:
     return package_name.replace(".", "/")
 
 
+def _make_safe_inline_compose(raw: str) -> str:
+    content = (raw or "").strip()
+    if not content:
+        return "GeneratedPlaceholder()"
+    lowered = content.lower()
+    if "@composable" in lowered or "fun " in content:
+        return "GeneratedPlaceholder()"
+    if any(marker in content for marker in SAFE_WIDGET_MARKERS):
+        return content
+    return "GeneratedPlaceholder()"
+
+
 async def render_project(config: AndroidProjectConfig, output_dir: Path) -> None:
     env = _create_jinja_env()
 
     # Generate dynamic Compose content
     compose_content = await generate_compose_content_from_prompt(config.prompt)
+    compose_inline = _make_safe_inline_compose(compose_content)
 
     common_ctx: Dict[str, object] = {
         "app_name": config.app_name,
@@ -49,6 +66,7 @@ async def render_project(config: AndroidProjectConfig, output_dir: Path) -> None
         "min_sdk": config.min_sdk,
         "target_sdk": config.target_sdk,
         "compose_content": compose_content,
+        "compose_inline": compose_inline,
     }
 
     # Map of template path -> output relative path
