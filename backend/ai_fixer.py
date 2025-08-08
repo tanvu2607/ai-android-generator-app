@@ -6,6 +6,7 @@ from typing import List, Dict, Any
 import argparse
 import httpx
 import re
+import time
 
 TEMPLATES_ROOT = Path("backend/app/templates/android")
 
@@ -32,17 +33,33 @@ def call_gemini(api_key: str, prompt: str) -> str:
         ],
         "generationConfig": {"temperature": 0.1},
     }
-    with httpx.Client(timeout=60) as client:
-        r = client.post(url, json=payload)
-        r.raise_for_status()
-        data = r.json()
-        candidates = data.get("candidates") or []
-        if not candidates:
-            return "{}"
-        parts = ((candidates[0].get("content") or {}).get("parts") or [])
-        if not parts:
-            return "{}"
-        return parts[0].get("text", "{}")
+    backoffs = [2, 5, 10, 20]
+    for i, delay_s in enumerate(backoffs + [0]):  # final try without extra delay index
+        try:
+            with httpx.Client(timeout=60) as client:
+                r = client.post(url, json=payload)
+                if r.status_code == 429:
+                    raise httpx.HTTPStatusError("rate limit", request=r.request, response=r)
+                r.raise_for_status()
+                data = r.json()
+                candidates = data.get("candidates") or []
+                if not candidates:
+                    return "{}"
+                parts = ((candidates[0].get("content") or {}).get("parts") or [])
+                if not parts:
+                    return "{}"
+                return parts[0].get("text", "{}")
+        except httpx.HTTPStatusError as e:
+            if getattr(e.response, "status_code", None) == 429 and i < len(backoffs):
+                time.sleep(delay_s)
+                continue
+            raise
+        except httpx.RequestError:
+            if i < len(backoffs):
+                time.sleep(delay_s)
+                continue
+            raise
+    return "{}"
 
 
 def gather_template_snapshot() -> str:

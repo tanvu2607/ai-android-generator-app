@@ -34,13 +34,14 @@ regenerate_from_templates() {
   unzip -q android-project.zip -d "$PROJECT_DIR"
 }
 
-max_attempts=5
+max_attempts=50
 attempt=1
 
 # Inputs carried via environment (set by workflow step)
 APP_NAME=${APP_NAME:-GeneratedApp}
 PKG_NAME=${PKG_NAME:-com.example.generatedapp}
 PROMPT_TEXT=${PROMPT_TEXT:-Generated screen}
+AI_COOLDOWN_SECONDS=${AI_COOLDOWN_SECONDS:-10}
 
 # Ensure gradlew exists; if not, initialize wrapper
 if [ ! -f "$PROJECT_DIR/gradlew" ]; then
@@ -75,6 +76,8 @@ while [ $attempt -le $max_attempts ]; do
         chmod +x "$PROJECT_DIR/gradlew" || true
       fi
       print_diagnostics
+      echo "[ai-fix] Cooldown ${AI_COOLDOWN_SECONDS}s before next attempt..."
+      sleep "$AI_COOLDOWN_SECONDS" || true
     fi
   fi
 
